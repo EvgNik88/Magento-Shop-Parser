@@ -1,0 +1,4 @@
+.git/
+.idea/
+virtual_env/
+item_info.csv
