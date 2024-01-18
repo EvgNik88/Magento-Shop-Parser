@@ -2,3 +2,4 @@
 .idea/
 virtual_env/
 item_info.csv
+.pytest_cache/
