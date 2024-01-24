@@ -15,9 +15,9 @@ def product_information_parser(page):
         page.locator('//td[contains(@data-th, "Climate")]').first.text_content(),
         [color.get_attribute('aria-label') for color in page.locator('//*[@class="swatch-option color"]').all()]
     ]
-
+    page.locator('//*[@id="tab-label-additional"]').click()
     style_locator = page.locator('//td[contains(@data-th, "Style")]')
-    product_information.append(style_locator.first.text_content() if style_locator.count() == 1 else None)
+    product_information.append(style_locator.text_content() if style_locator.is_visible() else None)
 
     return product_information
 
@@ -48,8 +48,22 @@ def process_category(page, category_locator, csv_writer):
         csv_writer.writerow(parsed_info)
         page.go_back()
 
+    if has_next_page(page):
+        next_page = page.get_by_role('link', name='Next').last
+        next_page.click()
+        page.wait_for_load_state('domcontentloaded')
+        category_locator = page.locator('//li[contains(@class, "item product")]').all()
+        process_category(page, category_locator, csv_writer)
+    else:
+        return
 
-def main():
+
+def has_next_page(page):
+    next_page = page.get_by_role('link', name='Next').last
+    return next_page.is_visible
+
+
+def test_main():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         context = browser.new_context()
@@ -65,9 +79,15 @@ def main():
         pants = goto_category(page, 'ui-id-5', 'ui-id-18', 'ui-id-23')
         process_category(page, pants, csv_writer)
 
+        tanks = goto_category(page, 'ui-id-5', 'ui-id-17', 'ui-id-22')
+        process_category(page, tanks, csv_writer)
+
+        bras_and_tanks = goto_category(page, 'ui-id-4', 'ui-id-9', 'ui-id-14')
+        process_category(page, bras_and_tanks, csv_writer)
+
         csvfile.close()
         browser.close()
 
 
 if __name__ == "__main__":
-    main()
+    test_main()
