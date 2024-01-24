@@ -4,3 +4,4 @@ virtual_env/
 item_info.csv
 .pytest_cache/
 __pycache__/
+Magento_Shop_Parser.csv
