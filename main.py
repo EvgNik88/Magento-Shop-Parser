@@ -1,9 +1,16 @@
 import time
 import csv
-
 from playwright.sync_api import sync_playwright
+import categories_for_parse as category
 
-URL = 'https://magento.softwaretestingboard.com/'
+
+# URL = 'https://magento.softwaretestingboard.com/'
+#
+# CATEGORY_MEN = 'ui-id-5'
+# CATEGORY_MEN_TOPS = 'ui-id-17'
+# CATEGORY_MEN_HOODIES_AND_SWEATSHIRTS = 'ui-id-20'
+# CATEGORY_MEN_BOTTOMS = 'ui-id-18'
+# CATEGORY_MEN_PANTS = 'ui-id-23'
 
 
 def product_information_parser(page):
@@ -41,7 +48,8 @@ def goto_category(page, *category_ids):
     return items
 
 
-def process_category(page, category_locator, csv_writer):
+def process_category(page, csv_writer):
+    category_locator = page.locator('//li[contains(@class, "item product")]').all()
     for index, item in enumerate(category_locator):
         item.click()
         page.wait_for_selector('//*[@class="swatch-option color"]')
@@ -54,8 +62,7 @@ def process_category(page, category_locator, csv_writer):
         next_page = page.locator('//a[@class="action  next"]').last
         next_page.click()
         page.wait_for_load_state('domcontentloaded')
-        category_locator = page.locator('//li[contains(@class, "item product")]').all()
-        process_category(page, category_locator, csv_writer)
+        process_category(page, csv_writer)
 
 
 def has_next_page(page):
@@ -63,7 +70,7 @@ def has_next_page(page):
     return next_page.is_visible()
 
 
-def main():
+def test_main():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
         context = browser.new_context()
@@ -71,17 +78,17 @@ def main():
 
         csv_writer, csvfile = initialize_csv_writer()
 
-        page.goto(URL, wait_until='domcontentloaded')
+        page.goto(category.URL, wait_until='domcontentloaded')
 
-        men_hoodies_and_sweatshirts = goto_category(page, 'ui-id-5', 'ui-id-17', 'ui-id-20')
-        process_category(page, men_hoodies_and_sweatshirts, csv_writer)
+        goto_category(page, category.MEN, category.MEN_TOPS, category.MEN_HOODIES_AND_SWEATSHIRTS)
+        process_category(page, csv_writer)
 
-        men_pants = goto_category(page, 'ui-id-5', 'ui-id-18', 'ui-id-23')
-        process_category(page, men_pants, csv_writer)
+        goto_category(page, category.MEN, category.MEN_BOTTOMS, category.MEN_PANTS)
+        process_category(page, csv_writer)
 
         csvfile.close()
         browser.close()
 
 
 if __name__ == "__main__":
-    main()
+    test_main()
